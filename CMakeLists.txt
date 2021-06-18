@@ -14,8 +14,9 @@ PROJECT(iroha
   LANGUAGES C CXX)
 
 SET(CMAKE_CXX_STANDARD 17)
-
+SET(CMAKE_TOOLCHAIN_FILE "/home/piotr/Pulpit/HL_iroha/iroha_clone/vcpkg/scripts/buildsystems/vcpkg.cmake")
 SET(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
+include("/home/piotr/Pulpit/HL_iroha/iroha_clone/vcpkg/scripts/buildsystems/vcpkg.cmake")
 if (NOT MSVC)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -fdiagnostics-color=always")
   SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -Wno-error=deprecated-declarations")

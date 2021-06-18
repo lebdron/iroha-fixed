@@ -33,7 +33,13 @@ message TxPaginationMeta {
   oneof opt_first_tx_hash {
     string first_tx_hash = 2;
   }
-  Ordering ordering = 3;
+  oneof opt_first_tx_time {
+    string first_tx_time = 3;
+  }
+  oneof opt_last_tx_time {
+    string last_tx_time = 4;
+  }
+  Ordering ordering = 5;
 }
 
 message AssetPaginationMeta {
