@@ -646,29 +646,14 @@ Irohad::RunResult Irohad::initBlockLoader() {
  * Initializing consensus gate
  */
 Irohad::RunResult Irohad::initConsensusGate() {
-  auto block_query = storage->createBlockQuery();
-  if (not block_query) {
-    return iroha::expected::makeError<std::string>(
-        "Failed to create block query");
-  }
-  auto block_var =
-      (*block_query)->getBlock((*block_query)->getTopBlockHeight());
-  if (auto e = expected::resultToOptionalError(block_var)) {
-    return iroha::expected::makeError<std::string>(
-        "Failed to get the top block: " + e->message);
-  }
-
-  auto &block =
-      boost::get<expected::ValueOf<decltype(block_var)>>(&block_var)->value;
-
   auto initial_ledger_state = storage->getLedgerState();
   if (not initial_ledger_state) {
     return expected::makeError("Failed to fetch ledger state!");
   }
 
   consensus_gate = yac_init->initConsensusGate(
-      {block->height(), ordering::kFirstRejectRound},
-      storage,
+      {initial_ledger_state.value()->top_block_info.height,
+       ordering::kFirstRejectRound},
       config_.initial_peers,
       *initial_ledger_state,
       block_loader,
