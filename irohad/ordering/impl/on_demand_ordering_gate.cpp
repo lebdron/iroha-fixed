@@ -19,8 +19,7 @@
 #include "logger/logger.hpp"
 #include "ordering/impl/on_demand_common.hpp"
 
-using namespace iroha;
-using namespace iroha::ordering;
+using iroha::ordering::OnDemandOrderingGate;
 
 OnDemandOrderingGate::OnDemandOrderingGate(
     std::shared_ptr<OnDemandOrderingService> ordering_service,
@@ -84,7 +83,7 @@ void OnDemandOrderingGate::stop() {
   }
 }
 
-std::optional<network::OrderingEvent>
+std::optional<iroha::network::OrderingEvent>
 OnDemandOrderingGate::processProposalRequest(ProposalEvent const &event) const {
   if (not current_ledger_state_ || event.round != current_round_) {
     return std::nullopt;

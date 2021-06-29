@@ -49,7 +49,7 @@ namespace {
   }
 
   std::shared_ptr<Yac> createYac(
-      ClusterOrdering initial_order,
+      shared_model::interface::types::PeerList initial_order,
       Round initial_round,
       const shared_model::crypto::Keypair &keypair,
       std::shared_ptr<Timer> timer,
@@ -112,6 +112,12 @@ namespace iroha {
                 });
       }
 
+      std::optional<GateObject> YacInit::processRoundSwitch(
+          consensus::Round const &round,
+          std::shared_ptr<LedgerState const> ledger_state) {
+        return yac_gate_->processRoundSwitch(round, std::move(ledger_state));
+      }
+
       auto YacInit::createTimer(std::chrono::milliseconds delay_milliseconds) {
         return std::make_shared<TimerImpl>(delay_milliseconds);
       }
@@ -140,7 +146,7 @@ namespace iroha {
             });
 
         yac_ = createYac(
-            *ClusterOrdering::create(ledger_state->ledger_peers),
+            ledger_state->ledger_peers,
             initial_round,
             keypair,
             createTimer(vote_delay_milliseconds),

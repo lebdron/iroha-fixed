@@ -56,6 +56,10 @@ namespace iroha {
 
         void subscribe(std::function<void(GateObject const &)> callback);
 
+        std::optional<GateObject> processRoundSwitch(
+            consensus::Round const &round,
+            std::shared_ptr<LedgerState const> ledger_state);
+
        private:
         auto createTimer(std::chrono::milliseconds delay_milliseconds);
 

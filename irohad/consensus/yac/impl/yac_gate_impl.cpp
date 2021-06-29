@@ -48,12 +48,10 @@ YacGateImpl::YacGateImpl(
       hash_gate_(std::move(hash_gate)) {}
 
 void YacGateImpl::vote(const simulator::BlockCreatorEvent &event) {
-  if (current_hash_.vote_round >= event.round) {
-    log_->info(
-        "Current round {} is greater than or equal to vote round {}, "
-        "skipped",
-        current_hash_.vote_round,
-        event.round);
+  if (current_hash_.vote_round != event.round) {
+    log_->info("Current round {} not equal to vote round {}, skipped",
+               current_hash_.vote_round,
+               event.round);
     return;
   }
 
@@ -103,6 +101,21 @@ void YacGateImpl::stop() {
   hash_gate_->stop();
 }
 
+std::optional<iroha::consensus::GateObject> YacGateImpl::processRoundSwitch(
+    consensus::Round const &round,
+    std::shared_ptr<LedgerState const> ledger_state) {
+  current_hash_ = YacHash();
+  current_hash_.vote_round = round;
+  current_ledger_state_ = std::move(ledger_state);
+  current_block_ = boost::none;
+  consensus_result_cache_->release();
+  if (auto answer = hash_gate_->processRoundSwitch(
+          current_hash_.vote_round, current_ledger_state_->ledger_peers)) {
+    return processOutcome(*answer);
+  }
+  return std::nullopt;
+}
+
 void YacGateImpl::copySignatures(const CommitMessage &commit) {
   for (const auto &vote : commit.votes) {
     auto sig = vote.hash.block_signature;
@@ -124,6 +137,8 @@ std::optional<iroha::consensus::GateObject> YacGateImpl::handleCommit(
   }
 
   assert(hash.vote_round.block_round == current_hash_.vote_round.block_round);
+  assert(hash.vote_round.block_round
+         == current_ledger_state_->top_block_info.height + 1);
 
   if (hash == current_hash_ and current_block_) {
     // if node has voted for the committed block
@@ -167,6 +182,8 @@ std::optional<iroha::consensus::GateObject> YacGateImpl::handleReject(
   }
 
   assert(hash.vote_round.block_round == current_hash_.vote_round.block_round);
+  assert(hash.vote_round.block_round
+         == current_ledger_state_->top_block_info.height + 1);
 
   auto has_same_proposals =
       std::all_of(std::next(msg.votes.begin()),

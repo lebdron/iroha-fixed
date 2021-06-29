@@ -7,7 +7,12 @@
 #define IROHA_YAC_GATE_HPP
 
 #include "consensus/yac/cluster_order.hpp"
+#include "consensus/yac/storage/storage_result.hpp"
 #include "network/consensus_gate.hpp"
+
+namespace iroha::consensus {
+  struct Round;
+}
 
 namespace iroha::consensus::yac {
   class YacHash;
@@ -30,6 +35,10 @@ namespace iroha::consensus::yac {
         YacHash hash,
         ClusterOrdering order,
         boost::optional<ClusterOrdering> alternative_order = boost::none) = 0;
+
+    virtual std::optional<Answer> processRoundSwitch(
+        consensus::Round const &round,
+        shared_model::interface::types::PeerList const &peers) = 0;
 
     /// Prevent any new outgoing network activity. Be passive.
     virtual void stop() = 0;
