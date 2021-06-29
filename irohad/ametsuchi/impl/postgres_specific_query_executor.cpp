@@ -447,8 +447,6 @@ namespace iroha {
       auto first_hash = pagination_info.firstTxHash();
       // retrieve one extra transaction to populate next_hash
       auto query_size = pagination_info.pageSize() + 1u;
-      auto first_tx_time=pagination_info.firstTxTime();
-      auto last_tx_time=pagination_info.lastTxTime();
       char const *base = R"(WITH
                {0},
                my_txs AS (
@@ -487,14 +485,9 @@ namespace iroha {
                ? R"(, base_row AS(SELECT row FROM my_txs WHERE hash = lower(:hash) LIMIT 1))"
                : ""),
           (first_hash ? R"(JOIN base_row ON my_txs.row >= base_row.row)" : ""),
-          (first_tx_time
-               ? "AND :first_tx<ts" 
-               : ""
-          ),
-          (last_tx_time
-              ? "AND :last_tx>ts" 
-               : ""
-          ));
+               "AND (:first_tx::text IS NULL OR :first_tx<ts)" ,
+               "AND (:last_tx::text IS NULL OR :last_tx>ts )" 
+          );
       std::cout<<"query in line 487 "<<query<<std::endl;
       return executeQuery<QueryTuple, PermissionTuple>(
           applier(query),
@@ -733,60 +726,30 @@ namespace iroha {
           creator_id = :account_id
           AND asset_id IS NULL 
       )";
-      //what is socii:use passed nullopt returning? rather not null
-
-
       const auto &pagination_info = q.paginationMeta();
       auto first_hash = pagination_info.firstTxHash();
       auto query_size = pagination_info.pageSize() + 1u;
       auto first_tx_time=pagination_info.firstTxTime();
       auto last_tx_time=pagination_info.lastTxTime();
+      soci::indicator ind = soci::i_null;
       auto apply_query = [&](const auto &query) {
         return [&] {
-          //we need all ifs :( find better way to do it 
-          if (first_hash && last_tx_time) {
+          if (first_hash){
             return (sql_ .prepare << query,
                     soci::use(q.accountId()),
                     soci::use(first_hash->hex()),
-                    soci::use(last_tx_time),
-                    soci::use(query_size));
-          } else if (first_hash && first_tx_time){
-            return (sql_ .prepare << query,
-                    soci::use(q.accountId()),
-                    soci::use(first_hash->hex()),
-                    soci::use(first_tx_time),
-                    soci::use(query_size));
-          } else if (first_hash && first_tx_time && last_tx_time){
-            return (sql_ .prepare << query,
-                    soci::use(q.accountId()),
-                    soci::use(first_hash->hex()),
-                    soci::use(first_tx_time),
-                    soci::use(last_tx_time),
-                    soci::use(query_size));
-          }else if (first_tx_time && last_tx_time){
-            return (sql_ .prepare << query,
-                    soci::use(q.accountId()),
-                    soci::use(first_tx_time),
-                    soci::use(last_tx_time),
-                    soci::use(query_size));
-          }else if (last_tx_time){
-            return (sql_ .prepare << query,
-                    soci::use(q.accountId()),
-                    soci::use(last_tx_time),
-                    soci::use(query_size));
-          }else if ( first_tx_time){
-            return (sql_ .prepare << query,
-                    soci::use(q.accountId()),
-                    soci::use(first_tx_time),
-                    soci::use(query_size));
-          }else if (first_hash){
-            return (sql_ .prepare << query,
-                    soci::use(q.accountId()),
-                    soci::use(first_hash->hex()),
+                    soci::use(first_tx_time,ind),
+                    soci::use(first_tx_time,ind),
+                    soci::use(last_tx_time,ind),
+                    soci::use(last_tx_time,ind),
                     soci::use(query_size));
           }else {
             return (sql_.prepare << query,
                     soci::use(q.accountId()),
+                    soci::use(first_tx_time,ind),
+                    soci::use(first_tx_time,ind),
+                    soci::use(last_tx_time,ind),
+                    soci::use(last_tx_time,ind),
                     soci::use(query_size));
           }
         };

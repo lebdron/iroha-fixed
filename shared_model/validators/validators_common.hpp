@@ -7,6 +7,8 @@
 #define IROHA_VALIDATORS_COMMON_HPP
 
 #include <string>
+#include <google/protobuf/util/time_util.h>
+
 
 namespace shared_model {
   namespace validation {
@@ -42,7 +44,7 @@ namespace shared_model {
      * @return true if string is in hex, false otherwise
      */
     bool validateHexString(const std::string &str);
-
+    bool validateTimeStamp(const google::protobuf::Timestamp &timestamp);
   }  // namespace validation
 }  // namespace shared_model
 
