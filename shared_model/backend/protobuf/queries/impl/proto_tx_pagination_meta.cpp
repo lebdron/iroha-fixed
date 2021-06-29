@@ -8,6 +8,7 @@
 #include <optional>
 #include "cryptography/hash.hpp"
 #include <iostream>
+#include <google/protobuf/util/time_util.h>
 // TODO remove iostream in final version
 namespace types = shared_model::interface::types;
 
@@ -33,21 +34,22 @@ std::optional<types::HashType> TxPaginationMeta::firstTxHash() const {
   }
   return types::HashType::fromHexString(meta_.first_tx_hash());
 }
-std::optional<std::string> TxPaginationMeta::firstTxTime() const {
+std::optional<types::TimestampType> TxPaginationMeta::firstTxTime() const {
   if (meta_.opt_first_tx_time_case()
       == iroha::protocol::TxPaginationMeta::OptFirstTxTimeCase::
              OPT_FIRST_TX_TIME_NOT_SET) {
     return std::nullopt;
   }
-  return meta_.first_tx_time();
+  std::cout<<"before conversion "<<google::protobuf::util::TimeUtil::TimestampToNanoseconds(meta_.first_tx_time())<<std::endl;
+  return google::protobuf::util::TimeUtil::TimestampToNanoseconds(meta_.first_tx_time());
 }
-std::optional<std::string> TxPaginationMeta::lastTxTime() const {
+std::optional<types::TimestampType> TxPaginationMeta::lastTxTime() const {
   if (meta_.opt_last_tx_time_case()
-      == iroha::protocol::TxPaginationMeta::OptLastTxTimeCase::
+      == iroha::protocol::TxPaginationMeta::  OptLastTxTimeCase::
              OPT_LAST_TX_TIME_NOT_SET) {
     return std::nullopt;
   }
-  return meta_.last_tx_time();
+  return google::protobuf::util::TimeUtil::TimestampToNanoseconds(meta_.last_tx_time());
 }
 shared_model::interface::Ordering const &TxPaginationMeta::ordering() const {
   return ordering_;

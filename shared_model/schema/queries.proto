@@ -9,7 +9,7 @@ package iroha.protocol;
 option go_package = "iroha.generated/protocol";
 
 import "primitive.proto";
-
+import "google/protobuf/timestamp.proto";
 enum Field {
   kCreatedTime = 0;
   kPosition = 1;
@@ -34,10 +34,10 @@ message TxPaginationMeta {
     string first_tx_hash = 2;
   }
   oneof opt_first_tx_time {
-    string first_tx_time = 3;
+    google.protobuf.Timestamp first_tx_time = 3;
   }
   oneof opt_last_tx_time {
-    string last_tx_time = 4;
+    google.protobuf.Timestamp last_tx_time = 4;
   }
   Ordering ordering = 5;
 }
