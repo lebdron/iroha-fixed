@@ -40,6 +40,22 @@ namespace {
             {"Last tx time from pagination meta is not a proper value."}};
       }
     }
+    if (paginationMeta.opt_first_tx_height_case()
+        != iroha::protocol::TxPaginationMeta::OPT_FIRST_TX_HEIGHT_NOT_SET) {
+      if (not validateHeight(paginationMeta.first_tx_height())) {
+        return shared_model::validation::ValidationError{
+            "TxPaginationMeta",
+            {"First tx Height from pagination meta is not a proper value."}};
+      }
+    }
+    if (paginationMeta.opt_last_tx_height_case()
+        != iroha::protocol::TxPaginationMeta::OPT_LAST_TX_HEIGHT_NOT_SET) {
+      if (not validateHeight(paginationMeta.last_tx_height())) {
+        return shared_model::validation::ValidationError{
+            "TxPaginationMeta",
+            {"Last tx Height from pagination meta is not a proper value."}};
+      }
+    }
     return std::nullopt;
   }
 }  // namespace

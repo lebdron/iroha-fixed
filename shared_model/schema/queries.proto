@@ -39,7 +39,13 @@ message TxPaginationMeta {
   oneof opt_last_tx_time {
     google.protobuf.Timestamp last_tx_time = 4;
   }
-  Ordering ordering = 5;
+  oneof opt_first_tx_height {
+    uint64 first_tx_height = 5;
+  }
+  oneof opt_last_tx_height {
+    uint64 last_tx_height = 6;
+  }
+  Ordering ordering = 7;
 }
 
 message AssetPaginationMeta {
