@@ -6,9 +6,9 @@
 #ifndef IROHA_VALIDATORS_COMMON_HPP
 #define IROHA_VALIDATORS_COMMON_HPP
 
-#include <string>
 #include <google/protobuf/util/time_util.h>
 
+#include <string>
 
 namespace shared_model {
   namespace validation {
@@ -44,7 +44,18 @@ namespace shared_model {
      * @return true if string is in hex, false otherwise
      */
     bool validateHexString(const std::string &str);
+    /**
+     * Check if given Timestamp has correct range
+     * @param timestamp Timestamp to check
+     * @return true if timestamp is in proper range, false otherwise
+     */
     bool validateTimeStamp(const google::protobuf::Timestamp &timestamp);
+    /**
+     * Check if given height has correct range
+     * @param height Height to check
+     * @return true if height is in proper range, false otherwise
+     */
+    bool validateHeight(const uint64_t &height);
   }  // namespace validation
 }  // namespace shared_model
 

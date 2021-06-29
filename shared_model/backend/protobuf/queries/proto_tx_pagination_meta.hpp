@@ -27,6 +27,8 @@ namespace shared_model {
       std::optional<interface::types::HashType> firstTxHash() const override;
       std::optional<interface::types::TimestampType> firstTxTime() const override;
       std::optional<interface::types::TimestampType> lastTxTime() const override;
+      std::optional<interface::types::HeightType> firstTxHeight() const override;
+      std::optional<interface::types::HeightType> lastTxHeight() const override;
       interface::Ordering const &ordering() const override;
 
      private:
