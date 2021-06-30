@@ -458,6 +458,7 @@ namespace iroha {
                  {8} -- height interval end
                  {1} -- ordering
                  ),
+                 
                total_size AS (SELECT COUNT(*) FROM my_txs) {3}
                SELECT my_txs.height, my_txs.index, count, perm FROM my_txs
                {4}
@@ -715,7 +716,8 @@ namespace iroha {
                                        Role::kGetAllSignatories,
                                        Role::kGetDomainSignatories));
     }
-
+    // TODO
+    // TEST
     QueryExecutorResult PostgresSpecificQueryExecutor::operator()(
         const shared_model::interface::GetAccountTransactions &q,
         const shared_model::interface::types::AccountIdType &creator_id,
