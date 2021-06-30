@@ -132,8 +132,10 @@ OnDemandOrderingServiceImpl::onRequestProposal(consensus::Round round) {
              : (round.block_round - current_round_.block_round))
         <= 2ull;
 
-    if (is_current_round_or_next2)
+    if (is_current_round_or_next2) {
       result = packNextProposals(round);
+      getSubscription()->notify(EventTypes::kOnPackProposal, round);
+    }
   } while (false);
   log_->debug("uploadProposal, {}, {}returning a proposal.",
               round,
