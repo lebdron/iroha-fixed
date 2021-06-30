@@ -3,7 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 #include "ametsuchi/impl/postgres_specific_query_executor.hpp"
+
+#include <tuple>
+#include <unordered_map>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/split.hpp>
@@ -11,9 +15,6 @@
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/algorithm/transform.hpp>
 #include <boost/range/irange.hpp>
-#include <tuple>
-#include <unordered_map>
-
 #include "ametsuchi/block_storage.hpp"
 #include "ametsuchi/impl/executor_common.hpp"
 #include "ametsuchi/impl/soci_std_optional.hpp"
@@ -454,8 +455,8 @@ namespace iroha {
                  {2} -- related_txs
                  {5} -- time interval begin
                  {6} -- time interval end
-                 {7} -- height interval begin
-                 {8} -- height interval end
+                 {7} -- height begin
+                 {8} -- height end
                  {1} -- ordering
                  ),
                  
@@ -716,8 +717,6 @@ namespace iroha {
                                        Role::kGetAllSignatories,
                                        Role::kGetDomainSignatories));
     }
-    // TODO
-    // TEST
     QueryExecutorResult PostgresSpecificQueryExecutor::operator()(
         const shared_model::interface::GetAccountTransactions &q,
         const shared_model::interface::types::AccountIdType &creator_id,
@@ -796,7 +795,6 @@ namespace iroha {
       has_all_perm AS ({}),
       t AS (
           SELECT DISTINCT height, hash FROM tx_positions WHERE hash IN ({})
-          --TRANSACTION2
       )
       SELECT height, hash, has_my_perm.perm, has_all_perm.perm FROM t
       RIGHT OUTER JOIN has_my_perm ON TRUE
@@ -1515,7 +1513,6 @@ namespace iroha {
                 select distinct creator_id as t
                 from tx_positions
                 where hash=lower(:tx_hash) 
-                --TRANSACTION3
               ),
               {}
             select

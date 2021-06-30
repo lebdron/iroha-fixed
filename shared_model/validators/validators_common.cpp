@@ -4,7 +4,9 @@
  */
 
 #include "validators/validators_common.hpp"
+
 #include <google/protobuf/util/time_util.h>
+
 #include <regex>
 
 namespace shared_model {
@@ -21,13 +23,14 @@ namespace shared_model {
       static const std::regex hex_regex{R"([0-9a-fA-F]*)"};
       return std::regex_match(str, hex_regex);
     }
-    bool validateTimeStamp(const google::protobuf::Timestamp &timestamp){
-      return google::protobuf::util::TimeUtil::TimestampToSeconds(timestamp) >= google::protobuf::util::TimeUtil::kTimestampMinSeconds &&
-             google::protobuf::util::TimeUtil::TimestampToSeconds(timestamp) <= google::protobuf::util::TimeUtil::kTimestampMaxSeconds;
+    bool validateTimeStamp(const google::protobuf::Timestamp &timestamp) {
+      return google::protobuf::util::TimeUtil::TimestampToSeconds(timestamp)
+          >= google::protobuf::util::TimeUtil::kTimestampMinSeconds
+          && google::protobuf::util::TimeUtil::TimestampToSeconds(timestamp)
+          <= google::protobuf::util::TimeUtil::kTimestampMaxSeconds;
     }
-    bool validateHeight(const uint64_t & height){
-      // validation to be added if neccesary
-      return true;
+    bool validateHeight(const uint64_t &height) {
+      return height>=1;
     }
   }  // namespace validation
 }  // namespace shared_model

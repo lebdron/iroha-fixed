@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "integration/executor/executor_fixture.hpp"
-
 #include <gtest/gtest.h>
+
 #include <boost/format.hpp>
+
 #include "backend/protobuf/queries/proto_query.hpp"
 #include "framework/common_constants.hpp"
+#include "integration/executor/executor_fixture.hpp"
 #include "integration/executor/query_permission_test.hpp"
 #include "module/shared_model/mock_objects_factories/mock_command_factory.hpp"
 #include "module/shared_model/mock_objects_factories/mock_query_factory.hpp"
