@@ -25,6 +25,7 @@ namespace shared_model {
        * @return account_id of requested transactions
        */
       virtual const types::AccountIdType &accountId() const = 0;
+
       /// Get the query pagination metadata.
       virtual const TxPaginationMeta &paginationMeta() const = 0;
 

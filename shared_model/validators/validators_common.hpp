@@ -51,9 +51,9 @@ namespace shared_model {
      */
     bool validateTimeStamp(const google::protobuf::Timestamp &timestamp);
     /**
-     * Check if given height has correct range
+     * Check if given block height has correct value
      * @param height Height to check
-     * @return true if height is in proper range, false otherwise
+     * @return true if height is corect value, false otherwise
      */
     bool validateHeight(const uint64_t &height);
   }  // namespace validation

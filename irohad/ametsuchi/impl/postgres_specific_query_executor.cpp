@@ -1512,7 +1512,7 @@ namespace iroha {
               target as (
                 select distinct creator_id as t
                 from tx_positions
-                where hash=lower(:tx_hash) 
+                where hash=lower(:tx_hash)
               ),
               {}
             select

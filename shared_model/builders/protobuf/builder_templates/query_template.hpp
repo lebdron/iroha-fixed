@@ -222,7 +222,6 @@ namespace shared_model {
         return queryField([&](auto proto_query) {
           auto query = proto_query->mutable_get_account_transactions();
           query->set_account_id(account_id);
-          // add neccesary fields here
           setTxPaginationMeta(query->mutable_pagination_meta(),
                               page_size,
                               first_hash,

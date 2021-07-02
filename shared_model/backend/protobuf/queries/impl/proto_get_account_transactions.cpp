@@ -27,5 +27,5 @@ namespace shared_model {
       return pagination_meta_;
     }
 
-  }  // namespace proto 
+  }  // namespace proto
 }  // namespace shared_model
