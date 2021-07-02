@@ -33,7 +33,7 @@ std::optional<types::HashType> TxPaginationMeta::firstTxHash() const {
   }
   return types::HashType::fromHexString(meta_.first_tx_hash());
 }
-// first_tx_height
+// first_tx_time
 std::optional<types::TimestampType> TxPaginationMeta::firstTxTime() const {
   if (meta_.opt_first_tx_time_case()
       == iroha::protocol::TxPaginationMeta::OptFirstTxTimeCase::
@@ -44,7 +44,7 @@ std::optional<types::TimestampType> TxPaginationMeta::firstTxTime() const {
   return google::protobuf::util::TimeUtil::TimestampToMilliseconds(
       meta_.first_tx_time());
 }
-// last_tx_height
+// last_tx_time
 std::optional<types::TimestampType> TxPaginationMeta::lastTxTime() const {
   if (meta_.opt_last_tx_time_case()
       == iroha::protocol::TxPaginationMeta::OptLastTxTimeCase::
