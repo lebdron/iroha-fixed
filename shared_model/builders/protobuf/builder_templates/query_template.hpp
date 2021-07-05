@@ -19,6 +19,7 @@
 #include "module/irohad/common/validators_config.hpp"
 #include "queries.pb.h"
 #include "validators/default_validator.hpp"
+#include <google/protobuf/util/time_util.h>
 
 namespace shared_model {
   namespace proto {
@@ -132,16 +133,22 @@ namespace shared_model {
           page_meta_payload->set_first_tx_hash(first_hash->hex());
         }
         if (first_tx_time) {
-          page_meta_payload->set_first_tx_time(first_tx_time);
+          auto timestamp_begin = new google::protobuf::Timestamp{};
+          timestamp_begin->set_seconds(first_tx_time.value() / 1000);
+          timestamp_begin->set_nanos((first_tx_time.value() % 1000) * 1000000);
+          page_meta_payload->set_allocated_first_tx_time(timestamp_begin);
         }
         if (last_tx_time) {
-          page_meta_payload->set_last_tx_time(last_tx_time);
+          auto timestamp_end = new google::protobuf::Timestamp{};
+          timestamp_end->set_seconds(last_tx_time.value() / 1000);
+          timestamp_end->set_nanos((last_tx_time.value() % 1000) * 1000000);
+          page_meta_payload->set_allocated_last_tx_time(timestamp_end);
         }
         if (first_tx_height) {
-          page_meta_payload->set_first_tx_height(first_tx_height);
+          page_meta_payload->set_first_tx_height(first_tx_height.value());
         }
         if (last_tx_height) {
-          page_meta_payload->set_last_tx_height(last_tx_height);
+          page_meta_payload->set_last_tx_height(last_tx_height.value());
         }
         if (ordering) {
           interface::Ordering::OrderingEntry const *ptr = nullptr;
@@ -216,7 +223,7 @@ namespace shared_model {
               std::nullopt,
           const std::optional<interface::types::HeightType> &first_tx_height =
               std::nullopt,
-          const std::optional<interface::types::TimestampType> &last_tx_height =
+          const std::optional<interface::types::HeightType> &last_tx_height =
               std::nullopt,
           const interface::Ordering *ordering = nullptr) const {
         return queryField([&](auto proto_query) {
@@ -225,6 +232,10 @@ namespace shared_model {
           setTxPaginationMeta(query->mutable_pagination_meta(),
                               page_size,
                               first_hash,
+                              first_tx_time,
+                              last_tx_time,
+                              first_tx_height,
+                              last_tx_height,
                               ordering);
         });
       }
@@ -241,7 +252,7 @@ namespace shared_model {
               std::nullopt,
           const std::optional<interface::types::HeightType> &first_tx_height =
               std::nullopt,
-          const std::optional<interface::types::TimestampType> &last_tx_height =
+          const std::optional<interface::types::HeightType> &last_tx_height =
               std::nullopt,
           const interface::Ordering *ordering = nullptr) const {
         return queryField([&](auto proto_query) {
@@ -251,6 +262,10 @@ namespace shared_model {
           setTxPaginationMeta(query->mutable_pagination_meta(),
                               page_size,
                               first_hash,
+                              first_tx_time,
+                              last_tx_time,
+                              first_tx_height,
+                              last_tx_height,
                               ordering);
         });
       }
@@ -367,7 +382,13 @@ namespace shared_model {
         return queryField([&](auto proto_query) {
           auto query = proto_query->mutable_get_pending_transactions();
           setTxPaginationMeta(
-              query->mutable_pagination_meta(), page_size, first_hash);
+              query->mutable_pagination_meta(),
+              page_size,
+              first_hash,
+              std::nullopt,
+              std::nullopt,
+              std::nullopt,
+              std::nullopt);
         });
       }
 
