@@ -23,7 +23,6 @@ namespace {
             {"First tx hash from pagination meta is not a hex string."}};
       }
     }
-    // add validation becouse now we can add timestamp like -123
     if (paginationMeta.opt_first_tx_time_case()
         != iroha::protocol::TxPaginationMeta::OPT_FIRST_TX_TIME_NOT_SET) {
       if (not validateTimeStamp(paginationMeta.first_tx_time())) {
