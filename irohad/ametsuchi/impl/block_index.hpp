@@ -7,6 +7,7 @@
 #define IROHA_BLOCK_INDEX_HPP
 
 #include <memory>
+#include <common/result_fwd.hpp>
 
 namespace shared_model {
   namespace interface {
@@ -14,8 +15,7 @@ namespace shared_model {
   }  // namespace interface
 }  // namespace shared_model
 
-namespace iroha {
-  namespace ametsuchi {
+namespace iroha::ametsuchi {
     /**
      * Internal interface for modifying index on blocks and transactions
      */
@@ -27,9 +27,11 @@ namespace iroha {
        * Create necessary indexes for block
        * @param block to be indexed
        */
-      virtual void index(const shared_model::interface::Block &) = 0;
+      virtual void index(const shared_model::interface::Block &,
+                         bool do_flush = true) = 0;
+
+      virtual iroha::expected::Result<void, std::string> flush() = 0;
     };
-  }  // namespace ametsuchi
-}  // namespace iroha
+}  // namespace iroha::ametsuchi
 
 #endif  // IROHA_BLOCK_INDEX_HPP

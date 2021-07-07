@@ -52,7 +52,7 @@ namespace iroha {
        * Applies block without additional validation function
        * @see apply(block, function)
        */
-      virtual bool apply(
+      virtual bool applyBlock(
           std::shared_ptr<const shared_model::interface::Block> block) = 0;
 
       /**
@@ -63,16 +63,19 @@ namespace iroha {
        * transactions
        * @return True if blocks were successfully applied, false otherwise.
        */
-      virtual bool apply(
+      virtual bool applyIf(
           rxcpp::observable<std::shared_ptr<shared_model::interface::Block>>
               blocks,
-          MutableStoragePredicate predicate) = 0;
+          MutableStoragePredicate predicate,
+          unsigned reindex_blocks_flush_cache_size_in_blocks = 1) = 0;
 
       /// Apply the local changes made to this MutableStorage to block_storage
       /// and the global WSV.
       virtual expected::Result<MutableStorage::CommitResult, std::string>
       commit(BlockStorage &block_storage) && = 0;
-
+      
+//      virtual iroha::expected::Result<void, std::string> flush() = 0;
+      
       virtual ~MutableStorage() = default;
     };
 

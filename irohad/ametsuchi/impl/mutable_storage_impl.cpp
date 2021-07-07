@@ -6,9 +6,11 @@
 #include "ametsuchi/impl/mutable_storage_impl.hpp"
 
 #include <fmt/core.h>
+
 #include <boost/variant/apply_visitor.hpp>
 #include <rxcpp/operators/rx-all.hpp>
 #include <stdexcept>
+
 #include "ametsuchi/command_executor.hpp"
 #include "ametsuchi/impl/peer_query_wsv.hpp"
 #include "ametsuchi/impl/postgres_block_index.hpp"
@@ -37,7 +39,7 @@ namespace iroha {
               std::make_unique<PeerQueryWsv>(std::make_shared<PostgresWsvQuery>(
                   sql_, log_manager->getChild("WsvQuery")->getLogger()))),
           block_index_(std::make_unique<PostgresBlockIndex>(
-              std::make_unique<PostgresIndexer>(sql_),
+              sql_,
               log_manager->getChild("PostgresBlockIndex")->getLogger())),
           transaction_executor_(std::make_unique<TransactionExecutor>(
               std::move(command_executor))),
@@ -47,9 +49,10 @@ namespace iroha {
       sql_ << "BEGIN";
     }
 
-    bool MutableStorageImpl::apply(
+    bool MutableStorageImpl::applyBlockIf(
         std::shared_ptr<const shared_model::interface::Block> block,
-        MutableStoragePredicate predicate) {
+        MutableStoragePredicate predicate,
+        bool do_flush) {
       auto execute_transaction = [this](auto &transaction) -> bool {
         auto result = transaction_executor_->execute(transaction, false);
         auto error = expected::resultToOptionalError(result);
@@ -64,8 +67,8 @@ namespace iroha {
                  block->height(),
                  block->hash().hex());
 
-      auto block_applied =
-          (not ledger_state_ or predicate(block, *ledger_state_.value()))
+      auto block_applied = (not ledger_state_ or (!predicate)
+                            or predicate(block, *ledger_state_.value()))
           and std::all_of(block->transactions().begin(),
                           block->transactions().end(),
                           execute_transaction);
@@ -78,7 +81,8 @@ namespace iroha {
         }
 
         block_storage_->insert(block);
-        block_index_->index(*block);
+        block_index_->index(*block, do_flush);
+        //block_index_->flush();
 
         auto opt_ledger_peers = peer_query_->getLedgerPeers();
         if (not opt_ledger_peers) {
@@ -112,25 +116,37 @@ namespace iroha {
       }
     }
 
-    bool MutableStorageImpl::apply(
+    bool MutableStorageImpl::applyBlock(
         std::shared_ptr<const shared_model::interface::Block> block) {
       return withSavepoint([&] {
-        return this->apply(block, [](const auto &, auto &) { return true; });
+        return this->applyBlockIf(block, [](const auto &, auto &) { return true; });
       });
     }
 
-    bool MutableStorageImpl::apply(
+    bool MutableStorageImpl::applyIf(
         rxcpp::observable<std::shared_ptr<shared_model::interface::Block>>
             blocks,
-        MutableStoragePredicate predicate) {
+        MutableStoragePredicate predicate,
+        unsigned reindex_blocks_flush_cache_size_in_blocks) {
       try {
-        return blocks
-            .all([&](auto block) {
-              return withSavepoint(
-                  [&] { return this->apply(block, predicate); });
+        auto counter = unsigned{0};
+        auto result = blocks
+            .all([&](auto block) {  // todo mutable, but rxcpp does not accept
+              auto result = withSavepoint(
+                  [&] { return this->applyBlockIf(block, predicate, false); });
+              // flush every N blocks
+              ++counter;
+              bool do_flush =
+                  counter % reindex_blocks_flush_cache_size_in_blocks
+                  == 0;  // or counter == blocks.size();
+              if(do_flush)
+                this->block_index_->flush();
+              return result;
             })
             .as_blocking()
             .first();
+        block_index_->flush();
+        return result;
       } catch (std::runtime_error const &e) {
         log_->warn("Apply has been failed: {}", e.what());
         return false;
@@ -172,6 +188,10 @@ namespace iroha {
                                             std::move(block_storage_)};
       };
     }
+
+//    iroha::expected::Result<void, std::string> MutableStorageImpl::flush(){
+//      block_index_->flush();
+//    }
 
     MutableStorageImpl::~MutableStorageImpl() {
       if (not committed) {

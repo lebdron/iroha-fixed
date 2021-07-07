@@ -29,7 +29,7 @@ namespace iroha {
     void SetUp() override {
       ametsuchi::AmetsuchiTest::SetUp();
       validator = std::make_shared<validation::ChainValidatorImpl>(
-          supermajority_checker, getTestLogger("ChainValidator"));
+          supermajority_checker, getTestLogger("ChainValidator"), 1);
 
       for (size_t i = 0; i < 5; ++i) {
         keys.push_back(shared_model::crypto::DefaultCryptoAlgorithmType::
@@ -94,7 +94,7 @@ namespace iroha {
 
       auto ms = createMutableStorage();
 
-      ms->apply(block);
+      ms->applyBlock(block);
       auto commit_result = storage->commit(std::move(ms));
       EXPECT_TRUE(boost::get<expected::ValueOf<decltype(commit_result)>>(
           (&commit_result)));

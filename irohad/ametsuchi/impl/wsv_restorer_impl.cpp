@@ -189,11 +189,8 @@ namespace iroha::ametsuchi {
 
       do {
         res = storage.createMutableStorage(command_executor, storage_factory) |
-            [this,
-             &storage,
-             &block_query,
-             &last_block_in_storage,
-             wait_for_new_blocks](auto &&mutable_storage) -> CommitResult {
+            [this, &storage, &block_query, &last_block_in_storage](
+                  auto &&mutable_storage) -> CommitResult {
           if (not block_query) {
             return expected::makeError("Cannot create BlockQuery");
           }
@@ -274,10 +271,10 @@ namespace iroha::ametsuchi {
           };
 
           if (new_last_block > last_block_in_storage) {
-            last_block_in_storage = new_last_block;
             log_->info("Blockstore has new blocks from {} to {}, restore them.",
                        last_block_in_storage,
                        new_last_block);
+            last_block_in_storage = new_last_block;
             break;
           }
         }

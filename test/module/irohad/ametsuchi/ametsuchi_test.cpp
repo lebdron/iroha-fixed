@@ -437,7 +437,7 @@ TEST_F(AmetsuchiTest, TestingStorageWhenCommitBlock) {
   });
 
   auto mutable_storage = createMutableStorage();
-  mutable_storage->apply(expected_block);
+  mutable_storage->applyBlock(expected_block);
 
   ASSERT_TRUE(val(storage->commit(std::move(mutable_storage))));
 
@@ -450,7 +450,8 @@ class IdentityChainValidator : public iroha::validation::ChainValidator {
   bool validateAndApply(
       rxcpp::observable<std::shared_ptr<shared_model::interface::Block>> blocks,
       MutableStorage &storage) const override {
-    return storage.apply(blocks, [](auto const &, auto &) { return true; });
+    return storage.applyIf(
+        blocks, [](auto const &, auto &) { return true; }, 1);
   }
 };
 using MockBlockIValidator =
