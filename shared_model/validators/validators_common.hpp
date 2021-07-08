@@ -49,7 +49,7 @@ namespace shared_model {
      * @param timestamp Timestamp to check
      * @return true if timestamp is in proper range, false otherwise
      */
-    bool validateTimeStamp(const google::protobuf::Timestamp &timestamp);
+    bool validateTimeStamp(const int64_t &timestamp);
     /**
      * Check if given block height has correct value
      * @param height Height to check
