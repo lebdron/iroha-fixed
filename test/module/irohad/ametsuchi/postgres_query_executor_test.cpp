@@ -1504,9 +1504,6 @@ namespace iroha {
       auto first_tx_time = iroha::time::now() - 1;
       this->createTransactionsAndCommit(10);
       auto last_tx_time = iroha::time::now() + 1;
-      for (auto &tx : this->tx_hashes_) {
-        std::cout << tx << std::endl;
-      }
       auto size = 15;
       auto query_response =
           this->queryPage(size, std::nullopt, first_tx_time, last_tx_time);
@@ -1610,9 +1607,6 @@ namespace iroha {
       checkSuccessfulResult<TransactionsPageResponse>(
           std::move(query_response),
           [this, size](const auto &tx_page_response) {
-            for (auto &tx : tx_page_response.transactions()) {
-              std::cout << tx << std::endl;
-            }
             EXPECT_EQ(tx_page_response.transactions().size(), 4);
           });
     }
