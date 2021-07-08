@@ -5,6 +5,8 @@
 
 #include "validators/protobuf/proto_query_validator.hpp"
 
+#include <google/protobuf/util/time_util.h>
+
 #include <ciso646>
 
 #include "validators/validation_error_helpers.hpp"
@@ -25,7 +27,9 @@ namespace {
     }
     if (paginationMeta.opt_first_tx_time_case()
         != iroha::protocol::TxPaginationMeta::OPT_FIRST_TX_TIME_NOT_SET) {
-      if (not validateTimeStamp(paginationMeta.first_tx_time())) {
+      if (not validateTimeStamp(
+              google::protobuf::util::TimeUtil::TimestampToMilliseconds(
+                  paginationMeta.first_tx_time()))) {
         return shared_model::validation::ValidationError{
             "TxPaginationMeta",
             {"First tx time from pagination meta is not a proper value."}};
@@ -33,7 +37,9 @@ namespace {
     }
     if (paginationMeta.opt_last_tx_time_case()
         != iroha::protocol::TxPaginationMeta::OPT_LAST_TX_TIME_NOT_SET) {
-      if (not validateTimeStamp(paginationMeta.last_tx_time())) {
+      if (not validateTimeStamp(
+              google::protobuf::util::TimeUtil::TimestampToMilliseconds(
+                  paginationMeta.last_tx_time()))) {
         return shared_model::validation::ValidationError{
             "TxPaginationMeta",
             {"Last tx time from pagination meta is not a proper value."}};

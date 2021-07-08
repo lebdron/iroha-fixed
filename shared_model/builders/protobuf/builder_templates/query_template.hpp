@@ -6,6 +6,8 @@
 #ifndef IROHA_PROTO_QUERY_BUILDER_TEMPLATE_HPP
 #define IROHA_PROTO_QUERY_BUILDER_TEMPLATE_HPP
 
+#include <google/protobuf/util/time_util.h>
+
 #include <boost/range/algorithm/for_each.hpp>
 #include <optional>
 #include <string_view>
@@ -19,7 +21,6 @@
 #include "module/irohad/common/validators_config.hpp"
 #include "queries.pb.h"
 #include "validators/default_validator.hpp"
-#include <google/protobuf/util/time_util.h>
 
 namespace shared_model {
   namespace proto {
@@ -86,7 +87,7 @@ namespace shared_model {
       /// Set tx pagination meta
       template <typename PageMetaPayload>
       static auto setTxPaginationMeta(
-          PageMetaPayload *page_meta_payload,
+          PageMetaPayload * page_meta_payload,
           interface::types::TransactionsNumberType page_size,
           const std::optional<interface::types::HashType> &first_hash =
               std::nullopt,
@@ -133,14 +134,14 @@ namespace shared_model {
           page_meta_payload->set_first_tx_hash(first_hash->hex());
         }
         if (first_tx_time) {
-          auto timestamp_begin = new google::protobuf::Timestamp{
-              google::protobuf::util::TimeUtil::MillisecondsToTimestamp(first_tx_time.value())};
-          page_meta_payload->set_allocated_first_tx_time(timestamp_begin);
+          auto timestamp_begin = page_meta_payload->mutable_first_tx_time();
+          timestamp_begin->set_seconds(first_tx_time.value() / 1000);
+          timestamp_begin->set_nanos((first_tx_time.value() % 1000) * 1000000);
         }
         if (last_tx_time) {
-          auto timestamp_end = new google::protobuf::Timestamp{
-              google::protobuf::util::TimeUtil::MillisecondsToTimestamp(last_tx_time.value())};
-          page_meta_payload->set_allocated_last_tx_time(timestamp_end);
+          auto timestamp_end = page_meta_payload->mutable_last_tx_time();
+          timestamp_end->set_seconds(last_tx_time.value() / 1000);
+          timestamp_end->set_nanos((last_tx_time.value() % 1000) * 1000000);
         }
         if (first_tx_height) {
           page_meta_payload->set_first_tx_height(first_tx_height.value());
@@ -379,14 +380,13 @@ namespace shared_model {
               std::nullopt) const {
         return queryField([&](auto proto_query) {
           auto query = proto_query->mutable_get_pending_transactions();
-          setTxPaginationMeta(
-              query->mutable_pagination_meta(),
-              page_size,
-              first_hash,
-              std::nullopt,
-              std::nullopt,
-              std::nullopt,
-              std::nullopt);
+          setTxPaginationMeta(query->mutable_pagination_meta(),
+                              page_size,
+                              first_hash,
+                              std::nullopt,
+                              std::nullopt,
+                              std::nullopt,
+                              std::nullopt);
         });
       }
 
