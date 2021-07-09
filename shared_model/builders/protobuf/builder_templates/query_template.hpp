@@ -134,14 +134,16 @@ namespace shared_model {
           page_meta_payload->set_first_tx_hash(first_hash->hex());
         }
         if (first_tx_time) {
-          auto timestamp_begin = page_meta_payload->mutable_first_tx_time();
-          timestamp_begin->set_seconds(first_tx_time.value() / 1000);
-          timestamp_begin->set_nanos((first_tx_time.value() % 1000) * 1000000);
+          auto timestamp_begin = new google::protobuf::Timestamp{
+              google::protobuf::util::TimeUtil::MillisecondsToTimestamp(
+                  first_tx_time.value())};
+          page_meta_payload->set_allocated_first_tx_time(timestamp_begin);
         }
         if (last_tx_time) {
-          auto timestamp_end = page_meta_payload->mutable_last_tx_time();
-          timestamp_end->set_seconds(last_tx_time.value() / 1000);
-          timestamp_end->set_nanos((last_tx_time.value() % 1000) * 1000000);
+          auto timestamp_end = new google::protobuf::Timestamp{
+              google::protobuf::util::TimeUtil::MillisecondsToTimestamp(
+                  last_tx_time.value())};
+          page_meta_payload->set_allocated_last_tx_time(timestamp_end);
         }
         if (first_tx_height) {
           page_meta_payload->set_first_tx_height(first_tx_height.value());
