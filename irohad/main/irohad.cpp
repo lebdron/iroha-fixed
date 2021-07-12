@@ -9,6 +9,7 @@
 #include <chrono>
 #include <csignal>
 #include <fstream>
+#include <future>
 #include <thread>
 
 #include "ametsuchi/storage.hpp"
@@ -250,13 +251,12 @@ int main(int argc, char *argv[]) {
     }
 
     if (config.utility_service) {
-      initUtilityService(
-          config.utility_service.value(),
-          [] {
-            exit_requested.set_value();
-            std::lock_guard<std::mutex>{shutdown_wait_mutex};
-          },
-          log_manager);
+      initUtilityService(config.utility_service.value(),
+                         [] {
+                           exit_requested.set_value();
+                           std::lock_guard<std::mutex>{shutdown_wait_mutex};
+                         },
+                         log_manager);
     }
 
     daemon_status_notifier->notify(
@@ -302,7 +302,7 @@ int main(int argc, char *argv[]) {
         FLAGS_wait_for_new_blocks
             ? iroha::StartupWsvSynchronizationPolicy::kWaitForNewBlocks
             : iroha::StartupWsvSynchronizationPolicy::kSyncUpAndGo,
-        ::iroha::network::getDefaultChannelParams(),
+        std::nullopt,
         boost::make_optional(config.mst_support,
                              iroha::GossipPropagationStrategyParams{}),
         boost::none);
