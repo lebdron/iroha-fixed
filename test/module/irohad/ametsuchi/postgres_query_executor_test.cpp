@@ -675,12 +675,12 @@ namespace iroha {
      protected:
       using Impl = QueryTxPaginationTest;
       
-      void commitTransactionsBlock(std::vector<shared_model::proto::Transaction> txs, size_t height){
+      void commitTransactionsBlock( const std::vector<shared_model::proto::Transaction> txs, size_t height){
         auto block = createBlock(txs, height);
         apply(storage, block);
       }
       
-      void commitEachTransactionBlock(std::vector<shared_model::proto::Transaction> txs,
+      void commitEachTransactionBlock(const std::vector<shared_model::proto::Transaction> txs,
                         size_t first,
                         size_t last,
                         size_t offset) {
