@@ -237,7 +237,7 @@ IntegrationTestFramework::IntegrationTestFramework(
   // amount of minutes in a day
   config_.mst_expiration_time = 24 * 60;
   config_.max_round_delay_ms = 0;
-  config_.proposal_creation_timeout = 0;
+  config_.proposal_creation_timeout = 1000;
   config_.stale_stream_max_rounds = 2;
   config_.max_proposal_size = 10;
   config_.mst_support = mst_support;

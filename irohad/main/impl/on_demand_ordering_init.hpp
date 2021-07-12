@@ -14,6 +14,7 @@
 #include "logger/logger_fwd.hpp"
 #include "logger/logger_manager_fwd.hpp"
 #include "main/subscription_fwd.hpp"
+#include "ordering/impl/round_switch.hpp"
 
 namespace google {
   namespace protobuf {
@@ -158,8 +159,10 @@ namespace iroha {
           std::shared_ptr<iroha::network::GenericClientFactory> client_factory,
           std::chrono::milliseconds proposal_creation_timeout);
 
-      void processSynchronizationEvent(
+      iroha::ordering::RoundSwitch processSynchronizationEvent(
           synchronizer::SynchronizationEvent event);
+
+      void processRoundSwitch(iroha::ordering::RoundSwitch const &event);
 
       void processCommittedBlock(
           std::shared_ptr<shared_model::interface::Block const> block);

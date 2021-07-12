@@ -47,6 +47,10 @@ namespace iroha::consensus::yac {
 
     void stop() override;
 
+    std::optional<GateObject> processRoundSwitch(
+        consensus::Round const &round,
+        std::shared_ptr<LedgerState const> ledger_state);
+
    private:
     /**
      * Update current block with signatures from commit message

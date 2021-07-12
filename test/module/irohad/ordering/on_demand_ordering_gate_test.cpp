@@ -137,7 +137,7 @@ TEST_F(OnDemandOrderingGateTest, BlockEvent) {
 
   EXPECT_CALL(*notification, onRequestProposal(round)).Times(1);
 
-  auto event = OnDemandOrderingGate::RoundSwitch(round, ledger_state);
+  auto event = RoundSwitch(round, ledger_state);
 
   ordering_gate->processRoundSwitch(event);
 
@@ -170,7 +170,7 @@ TEST_F(OnDemandOrderingGateTest, EmptyEvent) {
   EXPECT_CALL(*ordering_service, onCollaborationOutcome(round)).Times(1);
   EXPECT_CALL(*notification, onRequestProposal(round)).Times(1);
 
-  auto event = OnDemandOrderingGate::RoundSwitch(round, ledger_state);
+  auto event = RoundSwitch(round, ledger_state);
 
   ordering_gate->processRoundSwitch(event);
 
@@ -194,8 +194,7 @@ TEST_F(OnDemandOrderingGateTest, BlockEventNoProposal) {
   EXPECT_CALL(*ordering_service, onCollaborationOutcome(round)).Times(1);
   EXPECT_CALL(*notification, onRequestProposal(round)).Times(1);
 
-  ordering_gate->processRoundSwitch(
-      OnDemandOrderingGate::RoundSwitch(round, ledger_state));
+  ordering_gate->processRoundSwitch(RoundSwitch(round, ledger_state));
 
   auto val =
       ordering_gate->processProposalRequest({std::move(proposal), round});
@@ -216,8 +215,7 @@ TEST_F(OnDemandOrderingGateTest, EmptyEventNoProposal) {
   EXPECT_CALL(*ordering_service, onCollaborationOutcome(round)).Times(1);
   EXPECT_CALL(*notification, onRequestProposal(round)).Times(1);
 
-  ordering_gate->processRoundSwitch(
-      OnDemandOrderingGate::RoundSwitch(round, ledger_state));
+  ordering_gate->processRoundSwitch(RoundSwitch(round, ledger_state));
 
   auto val =
       ordering_gate->processProposalRequest({std::move(proposal), round});
@@ -269,8 +267,7 @@ TEST_F(OnDemandOrderingGateTest, ReplayedTransactionInProposal) {
       .Times(AtMost(1))
       .WillOnce(Return(ByMove(std::move(ufactory_proposal))));
 
-  ordering_gate->processRoundSwitch(
-      OnDemandOrderingGate::RoundSwitch(round, ledger_state));
+  ordering_gate->processRoundSwitch(RoundSwitch(round, ledger_state));
 
   auto val = ordering_gate->processProposalRequest(
       {std::move(arriving_proposal), round});
@@ -320,8 +317,7 @@ TEST_F(OnDemandOrderingGateTest, RepeatedTransactionInProposal) {
       .Times(AtMost(1))
       .WillOnce(Return(ByMove(std::move(ufactory_proposal))));
 
-  ordering_gate->processRoundSwitch(
-      OnDemandOrderingGate::RoundSwitch(round, ledger_state));
+  ordering_gate->processRoundSwitch(RoundSwitch(round, ledger_state));
 
   auto val = ordering_gate->processProposalRequest(
       {std::move(arriving_proposal), round});
@@ -354,8 +350,7 @@ TEST_F(OnDemandOrderingGateTest, PopNonEmptyBatchesFromTheCache) {
   EXPECT_CALL(*notification, onBatches(UnorderedElementsAreArray(collection)))
       .Times(1);
 
-  ordering_gate->processRoundSwitch(
-      OnDemandOrderingGate::RoundSwitch(round, ledger_state));
+  ordering_gate->processRoundSwitch(RoundSwitch(round, ledger_state));
 }
 
 /**
@@ -369,6 +364,5 @@ TEST_F(OnDemandOrderingGateTest, PopEmptyBatchesFromTheCache) {
 
   EXPECT_CALL(*notification, onBatches(_)).Times(0);
 
-  ordering_gate->processRoundSwitch(
-      OnDemandOrderingGate::RoundSwitch(round, ledger_state));
+  ordering_gate->processRoundSwitch(RoundSwitch(round, ledger_state));
 }

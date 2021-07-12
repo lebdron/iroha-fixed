@@ -98,7 +98,7 @@ class ConsensusSunnyDayTest : public ::testing::Test {
         network,
         crypto,
         timer,
-        order.value(),
+        order->getPeers(),
         initial_round,
         getTestLogger("Yac"));
 

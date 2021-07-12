@@ -148,6 +148,7 @@ TEST_F(YacGateTest, YacGateSubscriptionTest) {
   // make hash from block
   EXPECT_CALL(*hash_provider, makeHash(_)).WillOnce(Return(expected_hash));
 
+  gate->processRoundSwitch(round, ledger_state);
   gate->vote(BlockCreatorEvent{
       RoundData{expected_proposal, expected_block}, round, ledger_state});
 
@@ -189,12 +190,14 @@ TEST_F(YacGateTest, CacheReleased) {
       .WillOnce(Return(expected_hash))
       .WillOnce(Return(empty_hash));
 
+  gate->processRoundSwitch(round, ledger_state);
   gate->vote(BlockCreatorEvent{
       RoundData{expected_proposal, expected_block}, round, ledger_state});
 
   gate->processOutcome(expected_commit);
   round.reject_round++;
 
+  gate->processRoundSwitch(round, ledger_state);
   gate->vote({boost::none, round, ledger_state});
 
   ASSERT_EQ(block_cache->get(), nullptr);
@@ -215,6 +218,7 @@ TEST_F(YacGateTest, YacGateSubscribtionTestFailCase) {
   // make hash from block
   EXPECT_CALL(*hash_provider, makeHash(_)).WillOnce(Return(expected_hash));
 
+  gate->processRoundSwitch(round, ledger_state);
   gate->vote(BlockCreatorEvent{
       RoundData{expected_proposal, expected_block}, round, ledger_state});
 }
@@ -235,6 +239,7 @@ TEST_F(YacGateTest, AgreementOnNone) {
 
   ASSERT_EQ(block_cache->get(), nullptr);
 
+  gate->processRoundSwitch(round, ledger_state);
   gate->vote({boost::none, round, ledger_state});
 
   ASSERT_EQ(block_cache->get(), nullptr);
@@ -255,6 +260,7 @@ TEST_F(YacGateTest, DifferentCommit) {
 
   EXPECT_CALL(*hash_gate, vote(expected_hash, _, _)).Times(1);
 
+  gate->processRoundSwitch(round, ledger_state);
   gate->vote(BlockCreatorEvent{
       RoundData{expected_proposal, expected_block}, round, ledger_state});
 
@@ -305,6 +311,7 @@ TEST_F(YacGateTest, Future) {
   // make hash from block
   EXPECT_CALL(*hash_provider, makeHash(_)).WillOnce(Return(expected_hash));
 
+  gate->processRoundSwitch(round, ledger_state);
   gate->vote(BlockCreatorEvent{
       RoundData{expected_proposal, expected_block}, round, ledger_state});
 
@@ -341,6 +348,7 @@ TEST_F(YacGateTest, OutdatedFuture) {
   // make hash from block
   EXPECT_CALL(*hash_provider, makeHash(_)).WillOnce(Return(expected_hash));
 
+  gate->processRoundSwitch(round, ledger_state);
   gate->vote(BlockCreatorEvent{
       RoundData{expected_proposal, expected_block}, round, ledger_state});
 
@@ -369,6 +377,7 @@ class CommitFromTheFuture : public YacGateTest {
 
     EXPECT_CALL(*hash_gate, vote(expected_hash, _, _)).Times(1);
 
+    gate->processRoundSwitch(round, ledger_state);
     gate->vote(BlockCreatorEvent{
         RoundData{expected_proposal, expected_block}, round, ledger_state});
 
@@ -461,6 +470,7 @@ class YacGateOlderTest : public YacGateTest {
     // make hash from block
     ON_CALL(*hash_provider, makeHash(_)).WillByDefault(Return(expected_hash));
 
+    gate->processRoundSwitch(round, ledger_state);
     gate->vote(BlockCreatorEvent{
         RoundData{expected_proposal, expected_block}, round, ledger_state});
   }
@@ -478,8 +488,10 @@ TEST_F(YacGateOlderTest, OlderVote) {
 
   EXPECT_CALL(*hash_provider, makeHash(_)).Times(0);
 
-  gate->vote(BlockCreatorEvent{
-      boost::none, {round.block_round - 1, round.reject_round}, ledger_state});
+  gate->processRoundSwitch(round, ledger_state);
+
+  --round.block_round;
+  gate->vote(BlockCreatorEvent{boost::none, round, ledger_state});
 }
 
 /**
@@ -567,6 +579,7 @@ TEST_F(YacGateAlternativeOrderTest, AlternativeOrderUsed) {
   // yac consensus
   EXPECT_CALL(*hash_gate, vote(expected_hash, _, alternative_order)).Times(1);
 
+  gate->processRoundSwitch(round, ledger_state);
   gate->vote(BlockCreatorEvent{
       RoundData{expected_proposal, expected_block}, round, ledger_state});
 }
@@ -586,9 +599,11 @@ TEST_F(YacGateAlternativeOrderTest, AlternativeOrderUsedOnce) {
         .Times(1);
   }
 
+  gate->processRoundSwitch(round, ledger_state);
   gate->vote(BlockCreatorEvent{
       RoundData{expected_proposal, expected_block}, round, ledger_state});
-  gate->vote(BlockCreatorEvent{RoundData{expected_proposal, expected_block},
-                               {round.block_round + 1, 0},
-                               ledger_state});
+  iroha::consensus::Round next_round{round.block_round + 1, 0};
+  gate->processRoundSwitch(next_round, ledger_state);
+  gate->vote(BlockCreatorEvent{
+      RoundData{expected_proposal, expected_block}, next_round, ledger_state});
 }
