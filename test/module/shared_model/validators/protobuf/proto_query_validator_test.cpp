@@ -6,15 +6,13 @@
 #include "validators/protobuf/proto_query_validator.hpp"
 
 #include <gmock/gmock-matchers.h>
-#include <google/protobuf/util/time_util.h>
-
 #include <optional>
-
 #include "module/shared_model/validators/validators_fixture.hpp"
 #include "queries.pb.h"
 #include "validators/validation_error_output.hpp"
 
 using testing::HasSubstr;
+
 class ProtoQueryValidatorTest : public ValidatorsTest {
  public:
   shared_model::validation::ProtoQueryValidator validator;
@@ -49,105 +47,28 @@ TEST_F(ProtoQueryValidatorTest, SetQuery) {
 }
 
 iroha::protocol::Query generateGetAccountAssetTransactionsQuery(
-    const std::optional<std::string> &first_tx_hash = std::nullopt,
-    const std::optional<int64_t> &first_tx_time = std::nullopt,
-    const std::optional<int64_t> &last_tx_time = std::nullopt,
-    const std::optional<int64_t> &first_tx_height = std::nullopt,
-    const std::optional<int64_t> &last_tx_height = std::nullopt) {
+    const std::string &first_tx_hash) {
   iroha::protocol::Query result;
-  if (first_tx_hash) {
-    result.mutable_payload()
-        ->mutable_get_account_asset_transactions()
-        ->mutable_pagination_meta()
-        ->set_first_tx_hash(first_tx_hash.value());
-  }
-  if (first_tx_time) {
-    auto first_time = new google::protobuf::Timestamp(
-        google::protobuf::util::TimeUtil::MillisecondsToTimestamp(
-            first_tx_time.value()));
-    result.mutable_payload()
-        ->mutable_get_account_asset_transactions()
-        ->mutable_pagination_meta()
-        ->set_allocated_first_tx_time(first_time);
-  }
-  if (last_tx_time) {
-    auto last_time = new google::protobuf::Timestamp(
-        google::protobuf::util::TimeUtil::MillisecondsToTimestamp(
-            last_tx_time.value()));
-    result.mutable_payload()
-        ->mutable_get_account_asset_transactions()
-        ->mutable_pagination_meta()
-        ->set_allocated_last_tx_time(last_time);
-  }
-  if (first_tx_height) {
-    result.mutable_payload()
-        ->mutable_get_account_asset_transactions()
-        ->mutable_pagination_meta()
-        ->set_first_tx_height(first_tx_height.value());
-  }
-  if (last_tx_height) {
-    result.mutable_payload()
-        ->mutable_get_account_asset_transactions()
-        ->mutable_pagination_meta()
-        ->set_last_tx_height(last_tx_height.value());
-  }
+  result.mutable_payload()
+      ->mutable_get_account_asset_transactions()
+      ->mutable_pagination_meta()
+      ->set_first_tx_hash(first_tx_hash);
   return result;
 }
 
 iroha::protocol::Query generateGetAccountTransactionsQuery(
-    const std::optional<std::string> &first_tx_hash = std::nullopt,
-    const std::optional<int64_t> &first_tx_time = std::nullopt,
-    const std::optional<int64_t> &last_tx_time = std::nullopt,
-    const std::optional<int64_t> &first_tx_height = std::nullopt,
-    const std::optional<int64_t> &last_tx_height = std::nullopt) {
+    const std::string &first_tx_hash) {
   iroha::protocol::Query result;
-  if (first_tx_hash) {
-    result.mutable_payload()
-        ->mutable_get_account_transactions()
-        ->mutable_pagination_meta()
-        ->set_first_tx_hash(first_tx_hash.value());
-  }
-  if (first_tx_time) {
-    auto first_time = new google::protobuf::Timestamp(
-        google::protobuf::util::TimeUtil::MillisecondsToTimestamp(
-            first_tx_time.value()));
-    result.mutable_payload()
-        ->mutable_get_account_transactions()
-        ->mutable_pagination_meta()
-        ->set_allocated_first_tx_time(first_time);
-  }
-  if (last_tx_time) {
-    auto last_time = new google::protobuf::Timestamp(
-        google::protobuf::util::TimeUtil::MillisecondsToTimestamp(
-            last_tx_time.value()));
-    result.mutable_payload()
-        ->mutable_get_account_transactions()
-        ->mutable_pagination_meta()
-        ->set_allocated_last_tx_time(last_time);
-  }
-  if (first_tx_height) {
-    result.mutable_payload()
-        ->mutable_get_account_transactions()
-        ->mutable_pagination_meta()
-        ->set_first_tx_height(first_tx_height.value());
-  }
-  if (last_tx_height) {
-    result.mutable_payload()
-        ->mutable_get_account_transactions()
-        ->mutable_pagination_meta()
-        ->set_last_tx_height(last_tx_height.value());
-  }
+  result.mutable_payload()
+      ->mutable_get_account_transactions()
+      ->mutable_pagination_meta()
+      ->set_first_tx_hash(first_tx_hash);
   return result;
 }
 
 static std::string valid_tx_hash("123abc");
 static std::string invalid_tx_hash("not_hex");
-static int64_t invalid_timestamp =
-    google::protobuf::util::TimeUtil::kTimestampMaxSeconds + 1;
-static int64_t valid_timestamp =
-    google::protobuf::util::TimeUtil::kTimestampMinSeconds + 1234;
-static int64_t valid_height = 12;
-static int64_t invalid_height = 0;
+
 // valid pagination query tests
 
 class ValidProtoPaginationQueryValidatorTest
@@ -162,31 +83,8 @@ TEST_P(ValidProtoPaginationQueryValidatorTest, ValidPaginationQuery) {
 INSTANTIATE_TEST_SUITE_P(
     ProtoPaginationQueryTest,
     ValidProtoPaginationQueryValidatorTest,
-    ::testing::Values(
-        generateGetAccountAssetTransactionsQuery(valid_tx_hash),
-        generateGetAccountTransactionsQuery(valid_tx_hash),
-        generateGetAccountAssetTransactionsQuery(std::nullopt, valid_timestamp),
-        generateGetAccountTransactionsQuery(std::nullopt, valid_timestamp),
-        generateGetAccountAssetTransactionsQuery(std::nullopt,
-                                                 std::nullopt,
-                                                 valid_timestamp),
-        generateGetAccountTransactionsQuery(std::nullopt,
-                                            std::nullopt,
-                                            valid_timestamp),
-        generateGetAccountAssetTransactionsQuery(
-            std::nullopt, std::nullopt, std::nullopt, valid_height),
-        generateGetAccountTransactionsQuery(
-            std::nullopt, std::nullopt, std::nullopt, valid_height),
-        generateGetAccountAssetTransactionsQuery(std::nullopt,
-                                                 std::nullopt,
-                                                 std::nullopt,
-                                                 std::nullopt,
-                                                 valid_height),
-        generateGetAccountTransactionsQuery(std::nullopt,
-                                            std::nullopt,
-                                            std::nullopt,
-                                            std::nullopt,
-                                            valid_height)));
+    ::testing::Values(generateGetAccountAssetTransactionsQuery(valid_tx_hash),
+                      generateGetAccountTransactionsQuery(valid_tx_hash)));
 
 // invalid pagination query tests
 
@@ -201,29 +99,5 @@ TEST_P(InvalidProtoPaginationQueryTest, InvalidPaginationQuery) {
 INSTANTIATE_TEST_SUITE_P(
     InvalidProtoPaginationQueryTest,
     InvalidProtoPaginationQueryTest,
-    ::testing::Values(
-        generateGetAccountAssetTransactionsQuery(invalid_tx_hash),
-        generateGetAccountTransactionsQuery(invalid_tx_hash),
-        generateGetAccountAssetTransactionsQuery(std::nullopt,
-                                                 invalid_timestamp),
-        generateGetAccountTransactionsQuery(std::nullopt, invalid_timestamp),
-        generateGetAccountAssetTransactionsQuery(std::nullopt,
-                                                 std::nullopt,
-                                                 invalid_timestamp),
-        generateGetAccountTransactionsQuery(std::nullopt,
-                                            std::nullopt,
-                                            invalid_timestamp),
-        generateGetAccountAssetTransactionsQuery(
-            std::nullopt, std::nullopt, std::nullopt, invalid_height),
-        generateGetAccountTransactionsQuery(
-            std::nullopt, std::nullopt, std::nullopt, invalid_height),
-        generateGetAccountAssetTransactionsQuery(std::nullopt,
-                                                 std::nullopt,
-                                                 std::nullopt,
-                                                 std::nullopt,
-                                                 invalid_height),
-        generateGetAccountTransactionsQuery(std::nullopt,
-                                            std::nullopt,
-                                            std::nullopt,
-                                            std::nullopt,
-                                            invalid_height)));
+    ::testing::Values(generateGetAccountAssetTransactionsQuery(invalid_tx_hash),
+                      generateGetAccountTransactionsQuery(invalid_tx_hash)));

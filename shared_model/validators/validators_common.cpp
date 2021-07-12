@@ -23,13 +23,14 @@ namespace shared_model {
       static const std::regex hex_regex{R"([0-9a-fA-F]*)"};
       return std::regex_match(str, hex_regex);
     }
-    bool validateTimeStamp(const int64_t &timestamp) {
-      return timestamp >= google::protobuf::util::TimeUtil::kTimestampMinSeconds
-          && timestamp
+    bool validateTimeStamp(const google::protobuf::Timestamp &timestamp) {
+      return google::protobuf::util::TimeUtil::TimestampToSeconds(timestamp)
+          >= google::protobuf::util::TimeUtil::kTimestampMinSeconds
+          && google::protobuf::util::TimeUtil::TimestampToSeconds(timestamp)
           <= google::protobuf::util::TimeUtil::kTimestampMaxSeconds;
     }
     bool validateHeight(const uint64_t &height) {
-      return height >= 1;
+      return height>=1;
     }
   }  // namespace validation
 }  // namespace shared_model
