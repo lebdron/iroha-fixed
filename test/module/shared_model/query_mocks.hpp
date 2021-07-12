@@ -140,6 +140,10 @@ namespace shared_model {
     struct MockTxPaginationMeta : public TxPaginationMeta {
       MOCK_CONST_METHOD0(pageSize, types::TransactionsNumberType());
       MOCK_CONST_METHOD0(firstTxHash, std::optional<types::HashType>());
+      MOCK_CONST_METHOD0(firstTxTime, std::optional<types::TimestampType>());
+      MOCK_CONST_METHOD0(lastTxTime, std::optional<types::TimestampType>());
+      MOCK_CONST_METHOD0(firstTxHeight, std::optional<types::HeightType>());
+      MOCK_CONST_METHOD0(lastTxHeight, std::optional<types::HeightType>());
       MOCK_CONST_METHOD0(clone, TxPaginationMeta *());
       MOCK_CONST_METHOD0(ordering, Ordering const &());
     };

@@ -58,11 +58,23 @@ After ordering is specified, pagination can be executed:
 .. code-block:: proto
 
     message TxPaginationMeta {
-        uint32 page_size = 1;
-        oneof opt_first_tx_hash {
-            string first_tx_hash = 2;
-        }
-        Ordering ordering = 3;
+      uint32 page_size = 1;
+      oneof opt_first_tx_hash {
+        string first_tx_hash = 2;
+      }
+      oneof opt_first_tx_time {
+        google.protobuf.Timestamp first_tx_time = 3;
+      }
+      oneof opt_last_tx_time {
+        google.protobuf.Timestamp last_tx_time = 4;
+      }
+      oneof opt_first_tx_height {
+        uint64 first_tx_height = 5;
+      }
+      oneof opt_last_tx_height {
+        uint64 last_tx_height = 6;
+      }
+      Ordering ordering = 7;
     }
 
 What is added to the request structure in case of pagination
@@ -74,6 +86,10 @@ What is added to the request structure in case of pagination
 
     "Page size", "size of the page to be returned by the query, if the response contains fewer transactions than a page size, then next tx hash will be empty in response", "page_size > 0", "5"
     "First tx hash", "hash of the first transaction in the page. If that field is not set — then the first transactions are returned", "hash in hex format", "bddd58404d1315e0eb27902c5d7c8eb0602c16238f005773df406bc191308929"
+    "First tx time", "time of the first transaction in query result. If that field is not set - then the transactions starting from first are returned", "Google Protocol Buffer Timestamp type", "0001-01-01T00:00:00Z <= first tx time <= 9999-12-31T23:59:59.999999999Z"
+    "Last tx time", "time of the last transaction in query result. If that field is not set - then the transactions up to the last are returned", "Google Protocol Buffer Timestamp type", "0001-01-01T00:00:00Z <= last tx time <= 9999-12-31T23:59:59.999999999Z"
+    "First tx height", "block height of the first transaction in query result. If that field is not set - then the transactions starting from height 1 are returned", "first tx height > 0", "4"
+    "Last tx height", "block height of the last transaction in query result. If that field is not set - then the transactions up to the last one are returned", "last tx height > 0", "6"
     "ordering", "how the results should be ordered (before pagination is applied)", "see fields below", "see fields below"
     "ordering.sequence", "ordeing spec, like in SQL ORDER BY", "sequence of fields and directions", "[{kCreatedTime, kAscending}, {kPosition, kDescending}]"
 
