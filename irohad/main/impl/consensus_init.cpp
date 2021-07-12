@@ -17,6 +17,7 @@
 #include "consensus/yac/transport/impl/network_impl.hpp"
 #include "consensus/yac/yac.hpp"
 #include "logger/logger_manager.hpp"
+#include "main/subscription.hpp"
 #include "network/impl/client_factory_impl.hpp"
 
 using namespace iroha::consensus;
@@ -39,6 +40,19 @@ namespace {
     return std::make_shared<YacHashProviderImpl>();
   }
 
+  auto createNetwork(
+      std::shared_ptr<iroha::network::AsyncGrpcClient<google::protobuf::Empty>>
+          async_call,
+      std::shared_ptr<iroha::network::GenericClientFactory> client_factory,
+      logger::LoggerPtr log) {
+    return std::make_shared<NetworkImpl>(
+        async_call,
+        std::make_unique<
+            iroha::network::ClientFactoryImpl<NetworkImpl::Service>>(
+            std::move(client_factory)),
+        log);
+  }
+
   std::shared_ptr<Yac> createYac(
       ClusterOrdering initial_order,
       Round initial_round,
@@ -46,7 +60,6 @@ namespace {
       std::shared_ptr<Timer> timer,
       std::shared_ptr<YacNetwork> network,
       ConsistencyModel consistency_model,
-      rxcpp::observe_on_one_worker coordination,
       const logger::LoggerManagerTreePtr &consensus_log_manager) {
     std::shared_ptr<iroha::consensus::yac::CleanupStrategy> cleanup_strategy =
         std::make_shared<iroha::consensus::yac::BufferedCleanupStrategy>();
@@ -60,7 +73,6 @@ namespace {
         std::move(timer),
         initial_order,
         initial_round,
-        coordination,
         consensus_log_manager->getChild("HashGate")->getLogger());
   }
 }  // namespace
@@ -69,18 +81,44 @@ namespace iroha {
   namespace consensus {
     namespace yac {
 
-      std::shared_ptr<NetworkImpl> YacInit::getConsensusNetwork() const {
+      std::shared_ptr<ServiceImpl> YacInit::getConsensusNetwork() const {
         BOOST_ASSERT_MSG(initialized_,
                          "YacInit::initConsensusGate(...) must be called prior "
                          "to YacInit::getConsensusNetwork()!");
         return consensus_network_;
       }
 
+      void YacInit::subscribe(
+          std::function<void(GateObject const &)> callback) {
+        BOOST_ASSERT_MSG(initialized_,
+                         "YacInit::initConsensusGate(...) must be called prior "
+                         "to YacInit::subscribe()!");
+        states_subscription_ =
+            SubscriberCreator<bool, std::vector<VoteMessage>>::template create<
+                EventTypes::kOnState>(
+                iroha::SubscriptionEngineHandlers::kYac,
+                [yac(utils::make_weak(yac_)),
+                 yac_gate(utils::make_weak(yac_gate_)),
+                 callback(std::move(callback))](auto, auto state) {
+                  auto maybe_yac = yac.lock();
+                  auto maybe_yac_gate = yac_gate.lock();
+                  if (not(maybe_yac and maybe_yac_gate)) {
+                    return;
+                  }
+                  auto maybe_answer = maybe_yac->onState(std::move(state));
+                  if (not maybe_answer) {
+                    return;
+                  }
+                  auto maybe_outcome =
+                      maybe_yac_gate->processOutcome(*std::move(maybe_answer));
+                  if (maybe_outcome) {
+                    callback(*std::move(maybe_outcome));
+                  }
+                });
+      }
+
       auto YacInit::createTimer(std::chrono::milliseconds delay_milliseconds) {
-        return std::make_shared<TimerImpl>(
-            delay_milliseconds,
-            // TODO 2019-04-10 andrei: IR-441 Share a thread between MST and YAC
-            rxcpp::observe_on_new_thread());
+        return std::make_shared<TimerImpl>(delay_milliseconds);
       }
 
       std::shared_ptr<YacGate> YacInit::initConsensusGate(
@@ -90,7 +128,6 @@ namespace iroha {
           boost::optional<shared_model::interface::types::PeerList>
               alternative_peers,
           std::shared_ptr<const LedgerState> ledger_state,
-          std::shared_ptr<simulator::BlockCreator> block_creator,
           std::shared_ptr<network::BlockLoader> block_loader,
           const shared_model::crypto::Keypair &keypair,
           std::shared_ptr<consensus::ConsensusResultCache>
@@ -101,45 +138,43 @@ namespace iroha {
               async_call,
           ConsistencyModel consistency_model,
           const logger::LoggerManagerTreePtr &consensus_log_manager,
-          std::chrono::milliseconds delay,
           std::shared_ptr<iroha::network::GenericClientFactory>
               client_factory) {
         auto peer_orderer = createPeerOrderer(peer_query_factory);
         auto peers = peer_query_factory->createPeerQuery() |
             [](auto &&peer_query) { return peer_query->getLedgerPeers(); };
 
-        consensus_network_ = std::make_shared<NetworkImpl>(
-            async_call,
-            std::make_unique<
-                iroha::network::ClientFactoryImpl<NetworkImpl::Service>>(
-                std::move(client_factory)),
-            consensus_log_manager->getChild("Network")->getLogger());
+        consensus_network_ = std::make_shared<ServiceImpl>(
+            consensus_log_manager->getChild("Service")->getLogger(),
+            [](std::vector<VoteMessage> state) {
+              getSubscription()->notify(EventTypes::kOnState, std::move(state));
+            });
 
-        auto yac = createYac(*ClusterOrdering::create(peers.value()),
-                             initial_round,
-                             keypair,
-                             createTimer(vote_delay_milliseconds),
-                             consensus_network_,
-                             consistency_model,
-                             rxcpp::observe_on_new_thread(),
-                             consensus_log_manager);
-        consensus_network_->subscribe(yac);
-
+        yac_ = createYac(
+            *ClusterOrdering::create(peers.value()),
+            initial_round,
+            keypair,
+            createTimer(vote_delay_milliseconds),
+            createNetwork(
+                async_call,
+                client_factory,
+                consensus_log_manager->getChild("Network")->getLogger()),
+            consistency_model,
+            consensus_log_manager);
         auto hash_provider = createHashProvider();
 
         initialized_ = true;
 
-        return std::make_shared<YacGateImpl>(
-            std::move(yac),
+        yac_gate_ = std::make_shared<YacGateImpl>(
+            yac_,
             std::move(peer_orderer),
             alternative_peers |
                 [](auto &peers) { return ClusterOrdering::create(peers); },
             std::move(ledger_state),
             hash_provider,
-            block_creator,
             std::move(consensus_result_cache),
-            consensus_log_manager->getChild("Gate")->getLogger(),
-            ConsensusOutcomeDelay(delay));
+            consensus_log_manager->getChild("Gate")->getLogger());
+        return yac_gate_;
       }
     }  // namespace yac
   }    // namespace consensus
