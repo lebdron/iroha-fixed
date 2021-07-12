@@ -52,6 +52,10 @@ grpc::Status OnDemandOsServerGrpc::SendBatches(
     return ::grpc::Status::OK;
   }
 
+  log_->info("Received SendBatches with {} from {}",
+             *batches.assumeValue().front(),
+             context->peer());
+
   ordering_service_->onBatches(std::move(batches).assumeValue());
 
   return ::grpc::Status::OK;

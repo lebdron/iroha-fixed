@@ -229,8 +229,7 @@ boost::optional<std::shared_ptr<shared_model::interface::Peer>> Yac::findPeer(
       cluster_order_.begin(), cluster_order_.end(), [&](const auto &peer) {
         return peer->pubkey() == vote.signature->publicKey();
       });
-  return it != cluster_order_.end() ? boost::make_optional(std::move(*it))
-                                    : boost::none;
+  return it != cluster_order_.end() ? boost::make_optional(*it) : boost::none;
 }
 
 // ------|Apply data|------
